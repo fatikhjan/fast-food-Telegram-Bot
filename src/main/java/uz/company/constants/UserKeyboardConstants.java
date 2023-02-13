@@ -16,16 +16,5 @@ public class UserKeyboardConstants {
     public static final String LIKE = "❤";
     public static final String GETBASCET = "\uD83D\uDDD1 Savat " + UserService.countbasket(UserController.userr.getBasket());
     public static final String BACK = "Orqaga";
-
-
-    public static UserKeyboardConstants getInstance() {
-        if (instance == null) {
-            synchronized (UserKeyboardConstants.class) {
-                if (instance == null)
-                    instance = new UserKeyboardConstants();
-            }
-        }
-        return instance;
-    }
 }
 

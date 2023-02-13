@@ -15,7 +15,7 @@ import java.util.List;
 
 public class UserInlineKeybordUtil {
 
-    private static UserInlineKeybordUtil instance;
+
 
     public static ReplyKeyboard getMenuInlineMarkup(List list) {
         List<List<InlineKeyboardButton>> inlineKeybordList = new ArrayList<>();
@@ -72,6 +72,13 @@ public class UserInlineKeybordUtil {
                 inlineKeybordList.add(buttons);
             }
         }
+
+        List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>();
+        InlineKeyboardButton button = new InlineKeyboardButton("Ortga->");
+        button.setCallbackData("Ortga->");
+        inlineKeyboardButtons.add(button);
+        inlineKeybordList.add(inlineKeyboardButtons);
+
         if (inlineKeybordList.isEmpty()) {
             sendMessage.setText("Bunday Product hozirda mavjud emas");
             return getOneButton("Ortga->");
@@ -108,13 +115,5 @@ public class UserInlineKeybordUtil {
     }
 
 
-    public static UserInlineKeybordUtil getInstance() {
-        if (instance == null) {
-            synchronized (UserInlineKeybordUtil.class) {
-                if (instance == null)
-                    instance = new UserInlineKeybordUtil();
-            }
-        }
-        return instance;
-    }
+
 }

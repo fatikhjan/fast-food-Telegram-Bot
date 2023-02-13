@@ -6,13 +6,13 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.User;
 import uz.company.container.ComponentContainer;
+import uz.company.container.ThreadSafeBeanContext;
 import uz.company.util.AdminInlineKeyboards;
 
 import java.util.List;
 
 public class AdminController {
 
-    private static AdminController instance;
 
     public void handleMessage(User user, Message message) {
         if (message.hasText()) {
@@ -28,7 +28,7 @@ public class AdminController {
 
     private void handletext(String text, Message message) {
 
-        AdminInlineKeyboards adminInlineKeyboards = AdminInlineKeyboards.getInstance();
+        AdminInlineKeyboards adminInlineKeyboards = ThreadSafeBeanContext.ADMIN_INLINE_KEYBOARDS_THREAD_LOCAL.get();
 
         String chatId = String.valueOf(message.getChatId());
 
@@ -48,14 +48,4 @@ public class AdminController {
 
     }
 
-
-    public static AdminController getInstance() {
-        if (instance == null) {
-            synchronized (AdminController.class) {
-                if (instance == null)
-                    instance = new AdminController();
-            }
-        }
-        return instance;
-    }
 }

@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import uz.company.container.ComponentContainer;
+import uz.company.container.ThreadSafeBeanContext;
 import uz.company.db.DataStore;
 import uz.company.model.Product;
 import uz.company.util.UserInlineKeybordUtil;
@@ -14,8 +15,6 @@ import java.util.List;
 
 public class UserService {
     static String path = "D:\\projects\\For_clients\\kfc_bot\\kfc_bot\\kfc_bot\\src\\main\\resources";
-
-    private static UserService instance;
 
     public static String countbasket(List<Product> basket) {
         double summa = 0;
@@ -43,7 +42,7 @@ public class UserService {
     }
 
     public void showProduct(SendPhoto sendPhoto, Product product) {
-        UserInlineKeybordUtil userInlineKeybordUtil = UserInlineKeybordUtil.getInstance();
+        UserInlineKeybordUtil userInlineKeybordUtil = ThreadSafeBeanContext.USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL.get();
         sendPhoto.setCaption(product.getName() + "\n" + product.getDescription());
         sendPhoto.setReplyMarkup(userInlineKeybordUtil.getButtonForProduct());
 
@@ -54,13 +53,5 @@ public class UserService {
     }
 
 
-    public static UserService getInstance() {
-        if (instance == null) {
-            synchronized (UserService.class) {
-                if (instance == null)
-                    instance = new UserService();
-            }
-        }
-        return instance;
-    }
+
 }

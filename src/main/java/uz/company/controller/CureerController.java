@@ -6,7 +6,6 @@ import org.telegram.telegrambots.meta.api.objects.User;
 
 public class CureerController {
 
-    private static CureerController instance;
 
     public void handleCallBakcQuery(Message message1, CallbackQuery message) {
 
@@ -17,15 +16,7 @@ public class CureerController {
     }
 
 
-    public static CureerController getInstance() {
-        if (instance == null) {
-            synchronized (CureerController.class) {
-                if (instance == null)
-                    instance = new CureerController();
-            }
-        }
-        return instance;
-    }
+
 
     public void handleCallBackQuery(Message message, CallbackQuery callbackQuery) {
 

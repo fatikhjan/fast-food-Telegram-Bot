@@ -11,7 +11,7 @@ import java.util.List;
 
 public class UserKeybordUtil {
 
-    private static UserKeybordUtil instance;
+
 
     public  ReplyKeyboard basicMenuKeyboard() {
         KeyboardButton menu = new KeyboardButton(UserKeyboardConstants.MENU);
@@ -31,13 +31,5 @@ public class UserKeybordUtil {
     }
 
 
-    public static UserKeybordUtil getInstance() {
-        if (instance == null) {
-            synchronized (UserKeybordUtil.class) {
-                if (instance == null)
-                    instance = new UserKeybordUtil();
-            }
-        }
-        return instance;
-    }
+
 }

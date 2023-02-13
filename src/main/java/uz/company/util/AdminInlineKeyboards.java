@@ -10,8 +10,6 @@ import java.util.List;
 
 public class AdminInlineKeyboards {
 
-    private static AdminInlineKeyboards instance;
-
     public  ReplyKeyboard getAdminMenu() {
         KeyboardButton addAds = new KeyboardButton("Menyu qoshish");
         KeyboardButton etitAds = new KeyboardButton("Menyuni ozgartirish");
@@ -29,15 +27,7 @@ public class AdminInlineKeyboards {
     }
 
 
-    public static AdminInlineKeyboards getInstance() {
-        if (instance == null) {
-            synchronized (AdminInlineKeyboards.class) {
-                if (instance == null)
-                    instance = new AdminInlineKeyboards();
-            }
-        }
-        return instance;
-    }
+
 
 
 }

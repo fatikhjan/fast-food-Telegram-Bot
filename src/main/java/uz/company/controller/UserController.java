@@ -6,6 +6,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.objects.*;
 import uz.company.constants.UserKeyboardConstants;
 import uz.company.container.ComponentContainer;
+import uz.company.container.ThreadSafeBeanContext;
 import uz.company.db.DataStore;
 import uz.company.db.State;
 import uz.company.model.Product;
@@ -18,7 +19,7 @@ import java.util.ArrayList;
 
 public class UserController {
 
-    private static UserController instance;
+
     public static uz.company.model.User userr;
 
 
@@ -45,7 +46,7 @@ public class UserController {
     }
 
     private void handleContact(Contact contact, Message message, User user) {
-        UserKeybordUtil userKeybordUtil = UserKeybordUtil.getInstance();
+        UserKeybordUtil userKeybordUtil = ThreadSafeBeanContext.USER_KEYBORD_UTIL_THREAD_LOCAL.get();
         userr.setContact(contact);
 
         SendMessage sendMessage = new SendMessage();
@@ -56,13 +57,14 @@ public class UserController {
     }
 
     private void handleText(String text, User user, Message message) {
-       UserKeybordUtil userKeybordUtil =UserKeybordUtil.getInstance();
-       UserService userService=UserService.getInstance();
+        UserKeybordUtil userKeybordUtil = ThreadSafeBeanContext.USER_KEYBORD_UTIL_THREAD_LOCAL.get();
+        UserService userService = ThreadSafeBeanContext.USER_SERVICE_THREAD_LOCAL.get();
 
         String chatId = String.valueOf(message.getChatId());
 
 
         SendMessage sendMessage;
+        SendPhoto sendPhoto;
 
 
         if (text.equals("/start")) {
@@ -127,19 +129,21 @@ public class UserController {
                 DataStore.states.remove(chatId);
                 ComponentContainer.bot.sendMsg(sendMessage);
             } else if (DataStore.states.get(chatId).equals(State.SEARCHING_TEXT_WAITING)) {
-                Product product = userService.findProduct(text);
                 sendMessage = new SendMessage();
                 sendMessage.setChatId(chatId);
+
+                Product product = userService.findProduct(text);
+                sendPhoto = new SendPhoto();
+                sendPhoto.setChatId(chatId);
                 if (product != null) {
-                    sendMessage.setText("Sizning " + text + " boyicha qidiruv natijasi :");
-                    sendMessage.setReplyMarkup(UserInlineKeybordUtil.getProductInlineKeyBord(product));
+                    userService.showProduct(sendPhoto, product);
                 } else {
                     sendMessage.setText("Sizning " + text + " qidiruvingiz boyicha hechnima topilmadi!");
                     sendMessage.setReplyMarkup(userKeybordUtil.basicMenuKeyboard());
+                    ComponentContainer.bot.sendMsg(sendMessage);
                 }
 
                 DataStore.states.remove(chatId);
-                ComponentContainer.bot.sendMsg(sendMessage);
 
             }
         }
@@ -149,8 +153,8 @@ public class UserController {
     public void handleCallBackQuery(Message message1, CallbackQuery message) {
 
 
-        UserInlineKeybordUtil userInlineKeybordUtil =UserInlineKeybordUtil.getInstance();
-        UserService userService=UserService.getInstance();
+        UserInlineKeybordUtil userInlineKeybordUtil = ThreadSafeBeanContext.USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL.get();
+        UserService userService = ThreadSafeBeanContext.USER_SERVICE_THREAD_LOCAL.get();
 
         String chatId = String.valueOf(message.getMessage().getChatId());
 
@@ -225,13 +229,4 @@ public class UserController {
     }
 
 
-    public static UserController getInstance() {
-        if (instance == null) {
-            synchronized (UserController.class) {
-                if (instance == null)
-                    instance = new UserController();
-            }
-        }
-        return instance;
-    }
 }

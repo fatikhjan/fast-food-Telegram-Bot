@@ -12,9 +12,13 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import uz.company.container.ComponentContainer;
+import uz.company.container.ThreadSafeBeanContext;
 import uz.company.controller.AdminController;
 import uz.company.controller.CureerController;
 import uz.company.controller.UserController;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Kfc_bot extends TelegramLongPollingBot {
     /**
@@ -43,45 +47,47 @@ public class Kfc_bot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        UserController userController = UserController.getInstance();
-        CureerController cureerController = CureerController.getInstance();
-        AdminController adminController = AdminController.getInstance();
-
-        //Object created for using it for everywhere and keep memory
-
+        UserController userController = ThreadSafeBeanContext.USER_CONTROLLER_THREAD_LOCAL.get();
+        CureerController cureerController = ThreadSafeBeanContext.CUREER_CONTROLLER_THREAD_LOCAL.get();
+        AdminController adminController = ThreadSafeBeanContext.ADMIN_CONTROLLER_THREAD_LOCAL.get();
 
         Message message = update.getMessage();
 
-        if (update.hasMessage()) {
-            String chatId = String.valueOf(message.getChatId());
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
 
+                Message message = update.getMessage();
+                if (update.hasMessage()) {
+                    String chatId = String.valueOf(message.getChatId());
+                    User user = message.getFrom();
+                    if (ComponentContainer.AdminsList.contains(chatId)) {
+                        adminController.handleMessage(user, message);
+                    } else if (ComponentContainer.curreersList.contains(chatId)) {
+                        cureerController.handleMessage(user, message);
+                    } else {
+                        userController.handleMessage(message, user);
+                    }
+                } else if (update.hasCallbackQuery()) {
 
-            User user = message.getFrom();
+                    CallbackQuery callbackQuery = update.getCallbackQuery();
 
+                    message = callbackQuery.getMessage();
 
-            if (ComponentContainer.AdminsList.contains(chatId)) {
-                adminController.handleMessage(user, message);
-            } else if (ComponentContainer.curreersList.contains(chatId)) {
-                cureerController.handleMessage(user, message);
-            } else {
-                userController.handleMessage(message, user);
+                    String chatId = String.valueOf(callbackQuery.getMessage().getChatId());
+
+                    if (ComponentContainer.AdminsList.contains(chatId)) {
+                        adminController.handleCallBackQuery(message, callbackQuery);
+                    } else if (ComponentContainer.curreersList.contains(chatId)) {
+                        cureerController.handleCallBackQuery(message, callbackQuery);
+                    } else {
+                        userController.handleCallBackQuery(message, callbackQuery);
+                    }
+                }
             }
-        } else if (update.hasCallbackQuery()) {
-
-            CallbackQuery callbackQuery = update.getCallbackQuery();
-
-            message = callbackQuery.getMessage();
-
-            String chatId = String.valueOf(callbackQuery.getMessage().getChatId());
-
-            if (ComponentContainer.AdminsList.contains(chatId)) {
-                adminController.handleCallBackQuery(message, callbackQuery);
-            } else if (ComponentContainer.curreersList.contains(chatId)) {
-                cureerController.handleCallBackQuery(message, callbackQuery);
-            } else {
-                userController.handleCallBackQuery(message, callbackQuery);
-            }
-        }
+        };
+        executorService.execute(runnable);
     }
 
     /**

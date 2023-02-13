@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DataStore {
 
-    private static DataStore instance;
+
     public static final List<String> UserMenuList = new ArrayList<>(Arrays.asList(
             "\uD83C\uDF7FBasketlar",
             "\uD83C\uDF54Burger",
@@ -36,13 +36,5 @@ public class DataStore {
     public static ConcurrentHashMap<String, State> states = new ConcurrentHashMap<>();
 
 
-    public static DataStore getInstance() {
-        if (instance == null) {
-            synchronized (DataStore.class) {
-                if (instance == null)
-                    instance = new DataStore();
-            }
-        }
-        return instance;
-    }
+
 }
