@@ -10,13 +10,13 @@ import java.util.List;
 
 public class AdminInlineKeyboards {
 
-    public  ReplyKeyboard getAdminMenu() {
+    public ReplyKeyboard getAdminMenu() {
         KeyboardButton addAds = new KeyboardButton("Menyu qoshish");
         KeyboardButton etitAds = new KeyboardButton("Menyuni ozgartirish");
 
 
-        KeyboardRow row1 = new KeyboardRow(Arrays.asList(addAds));
-        KeyboardRow row2 = new KeyboardRow(Arrays.asList(etitAds));
+        KeyboardRow row1 = new KeyboardRow(List.of(addAds));
+        KeyboardRow row2 = new KeyboardRow(List.of(etitAds));
 
         List<KeyboardRow> rows = Arrays.asList(row1, row2);
 
@@ -25,9 +25,6 @@ public class AdminInlineKeyboards {
         markup.setResizeKeyboard(true);
         return markup;
     }
-
-
-
 
 
 }

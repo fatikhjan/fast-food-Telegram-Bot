@@ -12,8 +12,7 @@ import java.util.List;
 public class UserKeybordUtil {
 
 
-
-    public  ReplyKeyboard basicMenuKeyboard() {
+    public ReplyKeyboard basicMenuKeyboard() {
         KeyboardButton menu = new KeyboardButton(UserKeyboardConstants.MENU);
         KeyboardButton savat = new KeyboardButton(UserKeyboardConstants.SAVAT);
         KeyboardButton search = new KeyboardButton(UserKeyboardConstants.SEARCH);
@@ -29,7 +28,6 @@ public class UserKeybordUtil {
         markup.setResizeKeyboard(true);
         return markup;
     }
-
 
 
 }

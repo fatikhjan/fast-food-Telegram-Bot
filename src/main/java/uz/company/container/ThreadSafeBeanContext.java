@@ -4,6 +4,7 @@ import uz.company.controller.AdminController;
 import uz.company.controller.CureerController;
 import uz.company.controller.UserController;
 import uz.company.db.DataStore;
+import uz.company.mappers.UserThingsMapper;
 import uz.company.model.Product;
 import uz.company.model.User;
 import uz.company.service.BasicService;
@@ -35,5 +36,7 @@ public class ThreadSafeBeanContext {
     public static final ThreadLocal<UserInlineKeybordUtil> USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL = ThreadLocal.withInitial(UserInlineKeybordUtil::new);
 
     public static final ThreadLocal<UserKeybordUtil> USER_KEYBORD_UTIL_THREAD_LOCAL = ThreadLocal.withInitial(UserKeybordUtil::new);
+    public static final ThreadLocal<UserThingsMapper> USER_THINGS_MAPPER_THREAD_LOCAL = ThreadLocal.withInitial(UserThingsMapper::new);
+
 
 }

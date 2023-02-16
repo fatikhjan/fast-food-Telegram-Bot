@@ -8,5 +8,7 @@ public enum Type {
     TWISTERLAR,
     SHRINLIKLAR,
     ICHIMLIKLAR,
-    SOUSLAR;
+    SOUSLAR
+
+
 }

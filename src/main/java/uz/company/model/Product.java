@@ -9,7 +9,6 @@ import uz.company.model.enums.Type;
 @NoArgsConstructor
 @Data
 public class Product {
-
     private Integer id;
     private String name;
     private String photoUrl;
@@ -17,7 +16,4 @@ public class Product {
     private String price;
     private int likes = 0;
     private Type type;
-
-
-
 }

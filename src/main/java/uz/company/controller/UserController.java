@@ -15,17 +15,16 @@ import uz.company.service.UserService;
 import uz.company.util.UserInlineKeybordUtil;
 import uz.company.util.UserKeybordUtil;
 
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class UserController {
 
-
-    public static uz.company.model.User userr;
+    static String chatId;
+    static org.telegram.telegrambots.meta.api.objects.User user;
+    public static uz.company.model.User userr = new uz.company.model.User(chatId, user, new ConcurrentHashMap<>(), null);
 
 
     public void handleMessage(Message message, User user) {
-
-        userr = new uz.company.model.User(String.valueOf(message.getChatId()), user, new ArrayList<>(), null);
 
         if (message.hasText()) {
             handleText(message.getText(), user, message);
@@ -48,7 +47,6 @@ public class UserController {
     private void handleContact(Contact contact, Message message, User user) {
         UserKeybordUtil userKeybordUtil = ThreadSafeBeanContext.USER_KEYBORD_UTIL_THREAD_LOCAL.get();
         userr.setContact(contact);
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
         sendMessage.setText("Sizning cantactiz olindi");
@@ -58,9 +56,11 @@ public class UserController {
 
     private void handleText(String text, User user, Message message) {
         UserKeybordUtil userKeybordUtil = ThreadSafeBeanContext.USER_KEYBORD_UTIL_THREAD_LOCAL.get();
+        UserInlineKeybordUtil userInlineKeybordUtil = ThreadSafeBeanContext.USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL.get();
         UserService userService = ThreadSafeBeanContext.USER_SERVICE_THREAD_LOCAL.get();
-
-        String chatId = String.valueOf(message.getChatId());
+        DataStore dataStore = ThreadSafeBeanContext.DATA_STORE_THREAD_LOCAL.get();
+        chatId = String.valueOf(message.getChatId());
+        user = user;
 
 
         SendMessage sendMessage;
@@ -70,19 +70,20 @@ public class UserController {
         if (text.equals("/start")) {
             sendMessage = new SendMessage();
             sendMessage.setChatId(chatId);
-            sendMessage.setText("Sizni Issiqina Suvli Qanotchalar Kutib Turipti");
+            sendMessage.setText("горячей Крылья ждут вас");
             sendMessage.setReplyMarkup(userKeybordUtil.basicMenuKeyboard());
             ComponentContainer.bot.sendMsg(sendMessage);
         } else if (text.equals(UserKeyboardConstants.MENU)) {
+            DataStore.init();
             sendMessage = new SendMessage();
             sendMessage.setChatId(chatId);
-            sendMessage.setText("Bugungi menu:");
-            sendMessage.setReplyMarkup(UserInlineKeybordUtil.getMenuInlineMarkup(DataStore.UserMenuList));
+            sendMessage.setText("Сегодняшнее меню:");
+            sendMessage.setReplyMarkup(userInlineKeybordUtil.getMenuInlineMarkup(DataStore.userMenuList));
             ComponentContainer.bot.sendMsg(sendMessage);
         } else if (text.equals(UserKeyboardConstants.CONTACT)) {
             sendMessage = new SendMessage();
             sendMessage.setChatId(chatId);
-            sendMessage.setText("Shikoyat yoki takliflaringizni yozib qoldiring men uni Tegishli joyga yetkazaman!");
+            sendMessage.setText("Напишите свои жалобы или предложения, и я отнесу их в соответствующее место!");
             if (DataStore.states.containsKey(chatId)) {
                 DataStore.states.remove(chatId);
                 DataStore.states.put(chatId, State.FEEDBACKWAITING);
@@ -98,14 +99,13 @@ public class UserController {
             } else {
                 sendMessage = new SendMessage();
                 sendMessage.setChatId(chatId);
-                sendMessage.setText("Sizning Savatingiz bosh");
+                sendMessage.setText("Ваша корзина пуста!");
                 ComponentContainer.bot.sendMsg(sendMessage);
             }
         } else if (text.equals(UserKeyboardConstants.SEARCH)) {
             sendMessage = new SendMessage();
             sendMessage.setChatId(chatId);
-            ComponentContainer.lastMessage = "Nima qidirmoqdasiz?";
-            sendMessage.setText(ComponentContainer.lastMessage);
+            sendMessage.setText("Что Вы ищете?");
             if (!DataStore.states.containsKey(chatId)) {
                 DataStore.states.put(chatId, State.SEARCHING_TEXT_WAITING);
             } else {
@@ -123,7 +123,7 @@ public class UserController {
                 }
                 sendMessage = new SendMessage();
                 sendMessage.setChatId(chatId);
-                sendMessage.setText("Sizning habaringiz adminga muvofaqiyatli yetqazildi!");
+                sendMessage.setText("Ваше сообщение успешно доставлено администратору!");
                 sendMessage.setReplyMarkup(userKeybordUtil.basicMenuKeyboard());
 
                 DataStore.states.remove(chatId);
@@ -138,25 +138,46 @@ public class UserController {
                 if (product != null) {
                     userService.showProduct(sendPhoto, product);
                 } else {
-                    sendMessage.setText("Sizning " + text + " qidiruvingiz boyicha hechnima topilmadi!");
+                    sendMessage.setText("По вашему " + text + " запросу ничего не найдено!");
                     sendMessage.setReplyMarkup(userKeybordUtil.basicMenuKeyboard());
                     ComponentContainer.bot.sendMsg(sendMessage);
                 }
 
                 DataStore.states.remove(chatId);
 
+            } else if (DataStore.states.get(chatId).equals(State.EDITING_PRODUCT_AMOUNT)) {
+                if (DataStore.amountProduct.get(chatId) != null) {
+                    Product product = DataStore.amountProduct.get(chatId);
+                    try {
+                        int amoutn = userService.checkStrIsNumber(text);
+                        userr.getBasket().remove(product);
+                        userr.getBasket().put(product, amoutn);
+                        sendMessage = new SendMessage();
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText("Количество товаров увеличено на введенное количество!\n" + "  Посмотреть корзину!");
+                        sendMessage.setReplyMarkup(userKeybordUtil.basicMenuKeyboard());
+                        DataStore.states.remove(chatId);
+                        DataStore.amountProduct.remove(chatId);
+                        ComponentContainer.bot.sendMsg(sendMessage);
+                    } catch (NumberFormatException ignored) {
+                        sendMessage = new SendMessage();
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText("Произошла ошибка при вводе номера, пожалуйста, введите еще раз:");
+                        ComponentContainer.bot.sendMsg(sendMessage);
+                    }
+                }
             }
         }
 
     }
 
     public void handleCallBackQuery(Message message1, CallbackQuery message) {
-
-
         UserInlineKeybordUtil userInlineKeybordUtil = ThreadSafeBeanContext.USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL.get();
+        UserKeybordUtil userKeybordUtil = ThreadSafeBeanContext.USER_KEYBORD_UTIL_THREAD_LOCAL.get();
         UserService userService = ThreadSafeBeanContext.USER_SERVICE_THREAD_LOCAL.get();
-
-        String chatId = String.valueOf(message.getMessage().getChatId());
+        DataStore dataStore = ThreadSafeBeanContext.DATA_STORE_THREAD_LOCAL.get();
+        chatId = String.valueOf(message.getMessage().getChatId());
+        user = message1.getFrom();
 
         String data = message.getData();
 
@@ -164,69 +185,62 @@ public class UserController {
 
         SendPhoto sendPhoto;
 
-        if (data.equals("\uD83C\uDF7FBasketlar")) {
+        if (data.equals("Ortga->") || data.equals("_back")) {
+            DataStore.init();
             sendMessage = new SendMessage();
             sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83C\uDF7FBasketlar");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.BASKETLAR));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("\uD83C\uDF54Burger")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83C\uDF54Burger");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.BURGER));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("\uD83C\uDF57 Tovuq")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83C\uDF57 Tovuq");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.TOVUQ));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("\uD83C\uDF5FSneyklar")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83C\uDF5FSneyklar");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.SNEYKLAR));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("\uD83C\uDF2FTwisterlar")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83C\uDF2FTwisterlar");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.TWISTERLAR));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("\uD83E\uDDC1Shrinliklar")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83E\uDDC1Shrinliklar");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.SHRINLIKLAR));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("\uD83E\uDDCBIchimliklar")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83E\uDDCBIchimliklar");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.ICHIMLIKLAR));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("\uD83E\uDD6BSouslar")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("\uD83E\uDD6BSouslar");
-            sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, Type.SOUSLAR));
-            ComponentContainer.bot.sendMsg(sendMessage);
-        } else if (data.equals("Ortga->")) {
-            sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("Bugungi Menu :");
-            sendMessage.setReplyMarkup(UserInlineKeybordUtil.getMenuInlineMarkup(DataStore.UserMenuList));
+            sendMessage.setText("Сегодняшнее меню:");
+            sendMessage.setReplyMarkup(userInlineKeybordUtil.getMenuInlineMarkup(DataStore.userMenuList));
             ComponentContainer.bot.sendMsg(sendMessage);
         } else if (userService.findProduct(data) != null) {
             Product product = userService.findProduct(data);
             sendPhoto = new SendPhoto();
             sendPhoto.setChatId(chatId);
             userService.showProduct(sendPhoto, product);
+        } else if (data.startsWith("toBascket")) {
+            String s = "";
+            char[] chars = data.toCharArray();
+            for (int i = 0; i < chars.length; i++) {
+                if (chars[i] == '=') {
+                    s = data.substring(i + 1, data.length());
+                    break;
+                }
+            }
+            Product product = userService.addToBasket(userr, Integer.valueOf(s), 1);
+            sendPhoto = new SendPhoto();
+            sendPhoto.setChatId(chatId);
+            userService.showProduct(sendPhoto, product);
+        } else if (data.equals("editbascet")) {
+            sendPhoto = new SendPhoto();
+            sendPhoto.setChatId(chatId);
+            userService.editbascet(sendPhoto, 0);
+        } else if (data.startsWith("_editProductNumber")) {
+            char[] chars = data.toCharArray();
+            int id = 0;
+            for (int i = 0; i < chars.length; i++) {
+                if (chars[i] == '=') {
+                    id = Integer.parseInt(data.substring(i + 1));
+                }
+            }
+            Product product = userService.getProductFromId(id);
+            DataStore.amountProduct.put(chatId, product);
+            DataStore.states.put(chatId, State.EDITING_PRODUCT_AMOUNT);
+            sendMessage = new SendMessage();
+            sendMessage.setChatId(chatId);
+            sendMessage.setText("Сколько из этих продуктов вы хотели бы заказать? (максимум = 20)");
+            ComponentContainer.bot.sendMsg(sendMessage);
+        } else {
+            Type type = userService.getTypeFromMap(data);
+            if (type != null) {
+                sendMessage = new SendMessage();
+                sendMessage.setChatId(chatId);
+                sendMessage.setText(data);
+                sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, type));
+                ComponentContainer.bot.sendMsg(sendMessage);
+            }
         }
         DeleteMessage deleteMessage = new DeleteMessage(chatId, message1.getMessageId());
         ComponentContainer.bot.sendMsg(deleteMessage);
     }
-
 
 }

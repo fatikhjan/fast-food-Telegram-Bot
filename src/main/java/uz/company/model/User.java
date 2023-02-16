@@ -5,8 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.telegram.telegrambots.meta.api.objects.Contact;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,6 +14,6 @@ public class User {
 
     private String chatId;
     private org.telegram.telegrambots.meta.api.objects.User user;
-    private List<Product> basket = new ArrayList<>();
+    private ConcurrentHashMap<Product, Integer> basket = new ConcurrentHashMap<>();
     private Contact contact;
 }

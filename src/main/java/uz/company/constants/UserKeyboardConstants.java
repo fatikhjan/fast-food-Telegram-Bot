@@ -1,20 +1,18 @@
 package uz.company.constants;
 
-import uz.company.controller.UserController;
-import uz.company.service.UserService;
-
 public class UserKeyboardConstants {
+    public final static String MENU = "\uD83C\uDF7DМЕНЮ";
+    public final static String SAVAT = "\uD83D\uDDD1Корзина";
+    public final static String SEARCH = "\uD83D\uDD0DПоиск";
+    public final static String CONTACT = "\uD83D\uDCF1Для справки";
+    public final static String EDIT_BASKET = "✏изменять";
+    public final static String BACK = "Назад->";
+    public final static String TO_BASKET = "✅ Добавить в корзину";
+    public final static String LIKE = "❤";
+    public final static String GETBASCET = "\uD83D\uDDD1Корзина";
+    public final static String MakeOreder = "✅ Сделать заказ";
 
-    private static UserKeyboardConstants instance;
-    public static final String MENU = "\uD83C\uDF7DMENU";
-    public static final String SAVAT = "\uD83D\uDDD1SAVAT";
-    public static final String SEARCH = "\uD83D\uDD0DQIDIRUV";
-    public static final String CONTACT = "\uD83D\uDCF1MUROJAT-UCHUN";
+    public static final String CLEARBASKET = "Очистить корзину";
 
-
-    public static final String TO_BASkET = "✅Savatga qoshish )";
-    public static final String LIKE = "❤";
-    public static final String GETBASCET = "\uD83D\uDDD1 Savat " + UserService.countbasket(UserController.userr.getBasket());
-    public static final String BACK = "Orqaga";
 }
 
