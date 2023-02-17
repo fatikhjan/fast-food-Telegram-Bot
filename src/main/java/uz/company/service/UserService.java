@@ -34,10 +34,7 @@ public class UserService {
         sb.append("Вот ваша корзина \n ___\n");
         basket.forEach((product, i) -> {
             if (i != 0) {
-                sb.append(product.getName() + "\n" + i + "dona * "
-                        + product.getPrice() + "uzs = "
-                        + (Double.parseDouble(product.getPrice()) * i)
-                        + "\n ___\n");
+                sb.append(product.getName() + "\n" + i + "шт * " + product.getPrice() + "uzs = " + (Double.parseDouble(product.getPrice()) * i) + "\n ___\n");
             }
 
         });
@@ -60,8 +57,7 @@ public class UserService {
 
         if (!UserController.userr.getBasket().containsKey(product)) {
             sendPhoto.setCaption(product.getName() + "\n" + product.getDescription());
-            sendPhoto.setReplyMarkup(userInlineKeybordUtil
-                    .getButtonForProduct(product.getId().toString()));
+            sendPhoto.setReplyMarkup(userInlineKeybordUtil.getButtonForProduct(product.getId().toString()));
         } else {
             sendPhoto.setCaption(product.getName() + "\n" + product.getDescription());
             sendPhoto.setReplyMarkup(userInlineKeybordUtil.getButtonForOrderedProduct(product));
@@ -85,9 +81,7 @@ public class UserService {
 
     public String countBascetPrice(ConcurrentHashMap<Product, Integer> basket) {
         AtomicReference<Double> a = new AtomicReference<>(0.0);
-        basket.forEach((product, i) ->
-                a.updateAndGet(
-                        v -> (double) (v + Double.parseDouble(product.getPrice()) * i)));
+        basket.forEach((product, i) -> a.updateAndGet(v -> (double) (v + Double.parseDouble(product.getPrice()) * i)));
         return a.toString();
     }
 
@@ -107,16 +101,61 @@ public class UserService {
         return Integer.parseInt(text);
     }
 
-    public void editbascet(SendPhoto sendPhoto, int i) {
-        UserInlineKeybordUtil userInlineKeybordUtil =
-                ThreadSafeBeanContext.USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL.get();
+    public void editBasket(SendPhoto sendPhoto, int i) {
+        UserInlineKeybordUtil userInlineKeybordUtil = ThreadSafeBeanContext.USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL.get();
         UserThingsMapper userThingsMapper = ThreadSafeBeanContext.USER_THINGS_MAPPER_THREAD_LOCAL.get();
+
+        if (UserController.userr.getBasket().size() == 0) {
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(sendMessage.getChatId());
+            sendMessage.setText("Ваша корзина пуста (");
+            ComponentContainer.bot.sendMsg(sendMessage);
+            return;
+        }
         List<uz.company.dto.Product> userBasketList = userThingsMapper.basketToList(UserController.userr.getBasket());
         uz.company.dto.Product product = userBasketList.get(i);
 
-        sendPhoto.setCaption(product.getProduct().getName() + "\n\n" +
-                product.getAmountSum());
+        sendPhoto.setCaption(product.getProduct().getName() + "\n\n" + product.getProductAmount() + "шт * " + product.getProduct().getPrice() + " uzs = " + product.getAmountSum());
+        sendPhoto.setReplyMarkup(userInlineKeybordUtil.getButtonForEditingBascet(product, userBasketList.indexOf(product), userBasketList.size(), false));
+        File file = new File(path, product.getProduct().getPhotoUrl());
+        sendPhoto.setPhoto(new InputFile(file));
+        ComponentContainer.bot.sendMsg(sendPhoto);
+    }
 
-        //todo : edit basket
+    public void editBasket(SendPhoto sendPhoto, String data) {
+        UserInlineKeybordUtil userInlineKeybordUtil = ThreadSafeBeanContext.USER_INLINE_KEYBORD_UTIL_THREAD_LOCAL.get();
+        UserThingsMapper userThingsMapper = ThreadSafeBeanContext.USER_THINGS_MAPPER_THREAD_LOCAL.get();
+        List<uz.company.dto.Product> userBasketList = userThingsMapper.basketToList(UserController.userr.getBasket());
+
+        int lastIndex = 0;
+
+        char[] chars = data.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == '=') {
+                lastIndex = Integer.parseInt(data.substring(i + 1));
+            }
+        }
+
+        if (data.equals("_editBasketProductAmount")) {
+            uz.company.dto.Product product = userBasketList.get(lastIndex);
+            sendPhoto.setCaption(product.getProduct().getName() + "\n\n" + product.getProductAmount() + "шт * " + product.getProduct().getPrice() + " uzs = " + product.getAmountSum());
+            sendPhoto.setReplyMarkup(userInlineKeybordUtil.getButtonForEditingBascet(product, userBasketList.indexOf(product), userBasketList.size(), true));
+            File file = new File(path, product.getProduct().getPhotoUrl());
+            sendPhoto.setPhoto(new InputFile(file));
+            ComponentContainer.bot.sendMsg(sendPhoto);
+
+        } else if (data.startsWith("_last")) {
+            editBasket(sendPhoto, lastIndex - 1);
+        } else if (data.startsWith("_next")) {
+            editBasket(sendPhoto, lastIndex + 1);
+        } else if (data.equals("_stopEditingBasket")) {
+
+        } else if (data.equals("_")) {
+        } else if (data.equals("+1")) {
+
+        } else if (data.equals("-1")) {
+
+        }
+
     }
 }

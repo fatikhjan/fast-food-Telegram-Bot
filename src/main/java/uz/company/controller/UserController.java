@@ -211,10 +211,13 @@ public class UserController {
             sendPhoto.setChatId(chatId);
             userService.showProduct(sendPhoto, product);
         } else if (data.equals("editbascet")) {
+            if (DataStore.states.get(chatId) != null) DataStore.states.remove(chatId);
+            DataStore.states.put(chatId, State.EDITING_BASKET);
             sendPhoto = new SendPhoto();
             sendPhoto.setChatId(chatId);
-            userService.editbascet(sendPhoto, 0);
-        } else if (data.startsWith("_editProductNumber")) {
+            userService.editBasket(sendPhoto,0);
+
+            } else if (data.startsWith("_editProductNumber")) {
             char[] chars = data.toCharArray();
             int id = 0;
             for (int i = 0; i < chars.length; i++) {
@@ -238,9 +241,19 @@ public class UserController {
                 sendMessage.setReplyMarkup(userInlineKeybordUtil.getListOfProducts(sendMessage, type));
                 ComponentContainer.bot.sendMsg(sendMessage);
             }
+
+            if (DataStore.states.containsKey(chatId)) {
+                if (DataStore.states.get(chatId).equals(State.EDITING_BASKET)) {
+                    sendPhoto = new SendPhoto();
+                    sendPhoto.setChatId(chatId);
+                    userService.editBasket(sendPhoto, data);
+                }
+            }
         }
-        DeleteMessage deleteMessage = new DeleteMessage(chatId, message1.getMessageId());
-        ComponentContainer.bot.sendMsg(deleteMessage);
+        if (!data.equals("_")) {
+            DeleteMessage deleteMessage = new DeleteMessage(chatId, message1.getMessageId());
+            ComponentContainer.bot.sendMsg(deleteMessage);
+        }
     }
 
 }

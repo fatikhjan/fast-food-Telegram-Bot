@@ -8,7 +8,7 @@ import uz.company.constants.UserKeyboardConstants;
 import uz.company.container.ThreadSafeBeanContext;
 import uz.company.controller.UserController;
 import uz.company.db.DataStore;
-import uz.company.model.Product;
+import uz.company.dto.Product;
 import uz.company.model.enums.Type;
 import uz.company.service.UserService;
 
@@ -51,13 +51,14 @@ public class UserInlineKeybordUtil {
         return new InlineKeyboardMarkup(inlineKeybordList);
     }
 
-    public static ReplyKeyboard getProductInlineKeyBord(Product product) {
+    public static ReplyKeyboard getProductInlineKeyBord(uz.company.model.Product product) {
         List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>();
 
         InlineKeyboardButton button = new InlineKeyboardButton(product.getName() + " " + product.getPrice() + " uzs");
         inlineKeyboardButtons.add(button);
 
-        List<List<InlineKeyboardButton>> inline = new ArrayList<>(Arrays.asList(inlineKeyboardButtons));
+        List<List<InlineKeyboardButton>> inline = new ArrayList<>(Arrays.
+                asList(inlineKeyboardButtons));
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(inline);
         return markup;
     }
@@ -65,7 +66,7 @@ public class UserInlineKeybordUtil {
     public ReplyKeyboard getListOfProducts(SendMessage sendMessage, Type type) {
         List<List<InlineKeyboardButton>> inlineKeybordList = new ArrayList<>();
 
-        for (Product product : DataStore.productList) {
+        for (uz.company.model.Product product : DataStore.productList) {
 
             if (product.getType().equals(type)) {
                 InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton(product.getName() + " " + product.getPrice() + " uzs");
@@ -129,7 +130,7 @@ public class UserInlineKeybordUtil {
         return new InlineKeyboardMarkup(Arrays.asList(buttons, buttons1));
     }
 
-    public ReplyKeyboard getButtonForOrderedProduct(Product product) {
+    public ReplyKeyboard getButtonForOrderedProduct(uz.company.model.Product product) {
         UserService userService = ThreadSafeBeanContext.USER_SERVICE_THREAD_LOCAL.get();
 
         InlineKeyboardButton button = new InlineKeyboardButton("-1");
@@ -160,13 +161,57 @@ public class UserInlineKeybordUtil {
         return new InlineKeyboardMarkup(Arrays.asList(row1, row2, row3));
     }
 
-    public ReplyKeyboard getLanguageInlineKeyboard() {
-        InlineKeyboardButton button1 = new InlineKeyboardButton("uz");
-        button1.setCallbackData("uz");
-        InlineKeyboardButton button2 = new InlineKeyboardButton("ru");
-        button2.setCallbackData("ru");
 
-        List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>(Arrays.asList(button1, button2));
-        return new InlineKeyboardMarkup(List.of(inlineKeyboardButtons));
+    public ReplyKeyboard getButtonForEditingBascet(Product product, int index, int listSize, boolean b) {
+
+        if (!b) {
+            InlineKeyboardButton button1 = new InlineKeyboardButton("✏" + product.getProductAmount()
+                    + "шт. |" + product.getProduct().getPrice() + "UZS " + product.getProduct().getName());
+            button1.setCallbackData("_editBasketProductAmount");
+
+            InlineKeyboardButton button2 = new InlineKeyboardButton("⬅");
+            if (index == 0) {
+                button2.setCallbackData("_");
+            } else button2.setCallbackData("_last=" + index);
+
+            InlineKeyboardButton button3 = new InlineKeyboardButton(index+1 + "/" + listSize);
+            button3.setCallbackData("_");
+            InlineKeyboardButton button4 = new InlineKeyboardButton("➡");
+            if ((index + 1) == listSize) {
+                button4.setCallbackData("_");
+            } else button4.setCallbackData("_next=" + index);
+            InlineKeyboardButton button5 = new InlineKeyboardButton("✅закончить редактирование!");
+            button5.setCallbackData("_stopEditingBasket");
+
+            List<InlineKeyboardButton> row1 = List.of(button1);
+            List<InlineKeyboardButton> row2 = List.of(button2, button3, button4);
+            List<InlineKeyboardButton> row3 = List.of(button5);
+
+
+            return new InlineKeyboardMarkup(List.of(row1, row2, row3));
+        } else {
+
+            InlineKeyboardButton button = new InlineKeyboardButton("-1");
+            button.setCallbackData("+1");
+            InlineKeyboardButton button0 = new InlineKeyboardButton("✏" + product.getProductAmount() + "шт.");
+            button0.setCallbackData("_editProductNumber=" + product.getProduct().getId());
+            InlineKeyboardButton button1 = new InlineKeyboardButton("+1");
+            button1.setCallbackData("-1");
+            InlineKeyboardButton button2 = new InlineKeyboardButton("⬅");
+            button2.setCallbackData("_last=" + index);
+            InlineKeyboardButton button3 = new InlineKeyboardButton(index+1 + "/" + listSize);
+            button3.setCallbackData("_");
+            InlineKeyboardButton button4 = new InlineKeyboardButton("➡");
+            button4.setCallbackData("_next=" + index);
+            InlineKeyboardButton button5 = new InlineKeyboardButton("✅закончить редактирование!");
+            button5.setCallbackData("_stopEditingBasket");
+
+            List<InlineKeyboardButton> row1 = List.of(button, button0, button1);
+            List<InlineKeyboardButton> row2 = List.of(button2, button3, button4);
+            List<InlineKeyboardButton> row3 = List.of(button5);
+
+            return new InlineKeyboardMarkup(List.of(row1, row2, row3));
+        }
+
     }
 }

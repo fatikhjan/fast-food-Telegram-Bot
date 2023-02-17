@@ -42,7 +42,8 @@ public class DataStore {
                             "10 ta Qarsildoqqanotchalar," + "5 ta striptlar," +
                             "270 gr Hushtam Baytslar va idish tola Freelar!" +
                             "\n Bunday Box lar albatta Hamma bilan Shrin Baham korish uchun!",
-                    "215000.00", 0, Type.BASKETLAR)
+                    "215000.00", 0, Type.BASKETLAR),
+            new Product(3, "Smth", "img.png", "WElcomella", "12324", 0, Type.BASKETLAR)
 
     ));
     public static ConcurrentHashMap<String, State> states = new ConcurrentHashMap<>();
